@@ -12,4 +12,5 @@ clientSocket.sendto(message.encode(), (serverName, serverPort))
 
 userList, serverAddr = clientSocket.recvfrom(2048)
 userList = userList.decode()
+print("유저 목록 : ")
 print(userList)
