@@ -44,6 +44,12 @@ def MakeSession(users):
         else:
             sessionUserList.append(oppositeID + ',' + ip + ',' + port)
 
+            # 초대장 보내기
+            message = "INVITE "
+            message = message + ID + ' '
+            userAddr = (ip, int(port))
+            clientSocket.sendto(message.encode(), userAddr)
+
     return sessionUserList
 
 def send():
@@ -121,6 +127,20 @@ if __name__ == '__main__':
                 time.sleep(1)
 
         elif command == 'Stay':
+            while True:
+                try:
+                    message, serverAddr = clientSocket.recvfrom(2048)
+                    message = message.decode()
+                    if message.split(' ')[0] == "INVITE":
+                        invitedUser = message.split(' ')[1]
+                        print(invitedUser + '님이 세션에 초대하였습니다. y/n\n')
+                        command = input('>> ')
+
+                        if command == 'y' or command == 'Y':
+                            break
+                except OSError as e:
+                    pass
+
             receiver.start()
 
             while True:
