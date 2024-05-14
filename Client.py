@@ -1,10 +1,28 @@
 import random
 from socket import *
 from threading import *
+import time
 
 serverName = 'localhost'
 serverPort = 10000
 ID = ""
+
+def RequestUserList():
+    # 현재 온라인인 유저 목록 요청
+    message = "USERLIST "
+    clientSocket.sendto(message.encode(), (serverName, serverPort))
+
+    # 유저 리스트를 확실히 받고 넘어가기
+    while True:
+        try:
+            userList, serverAddr = clientSocket.recvfrom(2048)
+            break
+        except OSError as e:
+            pass
+
+    userList = userList.decode()
+    return userList
+
 
 def MakeSession(users):
     sessionUserList = []
@@ -59,6 +77,8 @@ def recv():
 
 if __name__ == '__main__':
     clientSocket = socket(AF_INET, SOCK_DGRAM)
+    sender = Thread(target=send, args=())
+    receiver = Thread(target=recv, args=())
 
     ID = input("Enter Your ID : ")
 
@@ -67,33 +87,41 @@ if __name__ == '__main__':
     message = message + ID + ' '
     clientSocket.sendto(message.encode(), (serverName, serverPort))
 
-    #현재 온라인인 유저 목록 요청
-    message = "USERLIST "
-    clientSocket.sendto(message.encode(), (serverName, serverPort))
-
-    # 유저 리스트를 확실히 받고 넘어가기
-    while True:
-        try:
-            userList, serverAddr = clientSocket.recvfrom(2048)
-            break
-        except OSError as e:
-            pass
-
-    userList = userList.decode()
+    userList = RequestUserList()
     print("유저 목록 : ")
     print(userList)
 
     users = userList.split('\n')
+    
+    print("커맨드 목록")
+    print("1. UserList : 유저 목록 다시 받아오기")
+    print("2. MakeSession : 세션 만들기")
+    print("3. Stay : 초대 기다리기")
 
-    sessionUserList = MakeSession(users)
-    print("만든 세션 유저 목록: ")
-    for user in sessionUserList:
-        print(user)
+    while True:
+        command = input(">>")
 
-    print("내용을 입력하고 ENTER로 전송")
+        if command == 'UserList':
+            userList = RequestUserList()
+            print("유저 목록 : " + userList)
+            users = userList.split('\n')
 
-    sender = Thread(target=send, args=())
-    receiver = Thread(target=recv, args=())
+        elif command == 'MakeSession':
+            sessionUserList = MakeSession(users)
+            print("만든 세션 유저 목록: ")
+            for user in sessionUserList:
+                print(user)
 
-    sender.start()
-    receiver.start()
+            print("내용을 입력하고 ENTER로 전송")
+
+            sender.start()
+            receiver.start()
+
+            while True:
+                time.sleep(1)
+
+        elif command == 'Stay':
+            receiver.start()
+
+            while True:
+                time.sleep(1)

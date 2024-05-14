@@ -43,6 +43,9 @@ def GiveOnlineUserList():
         serverSocket.sendto(f.read().encode(), clientAddr)
 
 if __name__ == '__main__':
+    with open("UserList.txt", 'w') as f: #유저 목록 비우기
+        f.write("")
+
     while True:
         message, clientAddr = serverSocket.recvfrom(2048)
 
