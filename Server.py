@@ -3,8 +3,7 @@ import os.path
 from os import path
 
 serverPort = 10000
-serverSocket = socket(AF_INET, SOCK_DGRAM)
-serverSocket.bind(("", serverPort))
+serverName = 'localhost'
 
 def AddUser():
     print(message.decode())
@@ -43,13 +42,17 @@ def GiveOnlineUserList():
         serverSocket.sendto(f.read().encode(), clientAddr)
 
 if __name__ == '__main__':
+    serverSocket = socket(AF_INET, SOCK_DGRAM)
+    serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    serverSocket.bind((serverName, serverPort))
+
     with open("UserList.txt", 'w') as f: #유저 목록 비우기
         f.write("")
 
     while True:
         message, clientAddr = serverSocket.recvfrom(2048)
 
-        if message.decode().split(' ')[0] == "JOIN":
+        if message.decode().split(' ')[0] == "LOGIN":
             AddUser()
 
         elif message.decode().split(' ')[0] == "USERLIST":

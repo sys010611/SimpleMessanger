@@ -6,6 +6,7 @@ import time
 serverName = 'localhost'
 serverPort = 10000
 ID = ""
+sessionUserList = []
 
 def RequestUserList():
     # 현재 온라인인 유저 목록 요청
@@ -46,7 +47,13 @@ def MakeSession(users):
 
             # 초대장 보내기
             message = "INVITE "
-            message = message + ID + ' '
+            message += (ID + ' ')
+            message += '\n\n'
+            # body 부분에 sessionUserList를 첨부
+            for user in sessionUserList:
+                message += user
+                message += '\n'
+
             userAddr = (ip, int(port))
             clientSocket.sendto(message.encode(), userAddr)
 
@@ -89,8 +96,8 @@ if __name__ == '__main__':
     ID = input("Enter Your ID : ")
 
     #서버에 ID를 보냄
-    message = "JOIN "
-    message = message + ID + ' '
+    message = "LOGIN "
+    message += (ID + ' ')
     clientSocket.sendto(message.encode(), (serverName, serverPort))
 
     userList = RequestUserList()
@@ -100,16 +107,17 @@ if __name__ == '__main__':
     users = userList.split('\n')
     
     print("커맨드 목록")
-    print("1. UserList : 유저 목록 다시 받아오기")
+    print("1. UserList : 유저 목록 새로고침")
     print("2. MakeSession : 세션 만들기")
     print("3. Stay : 초대 기다리기")
 
     while True:
-        command = input(">>")
+        command = input(">> ")
 
         if command == 'UserList':
             userList = RequestUserList()
-            print("유저 목록 : " + userList)
+            print("유저 목록")
+            print(userList)
             users = userList.split('\n')
 
         elif command == 'MakeSession':
@@ -129,19 +137,33 @@ if __name__ == '__main__':
         elif command == 'Stay':
             while True:
                 try:
-                    message, serverAddr = clientSocket.recvfrom(2048)
+                    message, userAddr = clientSocket.recvfrom(2048)
                     message = message.decode()
-                    if message.split(' ')[0] == "INVITE":
-                        invitedUser = message.split(' ')[1]
-                        print(invitedUser + '님이 세션에 초대하였습니다. y/n\n')
-                        command = input('>> ')
+                    header = message.split('\n\n')[0]
+                    if header.split(' ')[0] == "INVITE":
+                        inviter = header.split(' ')[1]
+                        print(inviter + '로부터의 세션 초대 (y/n)')
 
-                        if command == 'y' or command == 'Y':
+                        accept = input('>> ')
+                        if accept == 'Y' or accept == 'y':
+                            # 세션 유저 리스트 받기
+                            sessionUserList = []
+                            body = message.split('\n\n')[1]
+                            for otherUser in body.split('\n'):
+                                sessionUserList.append(otherUser)
+
+                            print("세션에 참가 완료")
+                            print("유저 목록:")
+                            for user in sessionUserList:
+                                print(user.split(',')[0])
+
+                            sender.start()
+                            receiver.start()
                             break
+                        else:
+                            continue
                 except OSError as e:
                     pass
-
-            receiver.start()
 
             while True:
                 time.sleep(1)
