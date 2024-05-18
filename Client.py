@@ -38,6 +38,14 @@ def RequestUserList():
 
 
 def MakeSession():
+    users = RequestUserList()
+
+    invitingUserList = []
+    myIP, myPort = GetUserInfoByID(ID, users)
+    message = "INVITE "
+    message += (ID + ',' + myIP + ',' + str(myPort))
+    message += '\n\n '
+
     while True:  # 원하는 만큼 세션에 초청
         oppositeID = input("세션에 초대할 상대방의 ID를 입력하시오 (초대 종료 시 '.' 입력) : ")
 
@@ -45,21 +53,18 @@ def MakeSession():
             break
 
         ip, port = "", ""
-
-        users = RequestUserList()
         ip, port = GetUserInfoByID(oppositeID, users)
 
         if ip == "" and port == "":
             print("존재하지 않는 ID입니다.")
         else:
-            # 초대장 보내기
-            myIP, myPort = GetUserInfoByID(ID, users)
-            message = "INVITE "
-            message += (ID + ',' + myIP + ',' + str(myPort))
-            message += '\n\n '
+            invitingUserList.append((oppositeID, ip, port))
 
-            userAddr = (ip, int(port))
-            clientSocket.sendto(message.encode(), userAddr)
+    for user in invitingUserList:
+        # 초대장 보내기
+        userAddr = (user[1], int(user[2]))
+        clientSocket.sendto(message.encode(), userAddr)
+
     return
 
 
