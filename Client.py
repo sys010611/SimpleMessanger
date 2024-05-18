@@ -59,8 +59,6 @@ def MakeSession():
             message += '\n\n '
 
             userAddr = (ip, int(port))
-            print("초대장 내용: " + message)
-            print("목적지 : " + ip + ' ' + port)
             clientSocket.sendto(message.encode(), userAddr)
     return
 
@@ -75,11 +73,9 @@ def send():
         for user in sessionUserList:
             user_id = user.split(',')[0]
             if user_id == ID:  # 자기 자신에게는 전송하지 않음
-                print("자기 자신에게는 전송하지 않음")
                 continue
             user_ip = user.split(',')[1]
             user_port = user.split(',')[2]
-            print('보낼 주소 : ' + user_ip + ' ' + user_port)
             userAddr = (user_ip, int(user_port))
             clientSocket.sendto(message.encode(), userAddr)
 
@@ -90,8 +86,6 @@ def recv():
         try:
             message, userAddr = clientSocket.recvfrom(2048)
             message = message.decode()
-
-            print(message)
 
             header = message.split('\n\n')[0]
             content = message.split('\n\n')[1]
@@ -133,7 +127,6 @@ def recv():
             if header.split(' ')[0] == "INFORM":
                 sessionUserList = []
                 for user in content.split('\n'):
-                    print('user: ' + user)
                     joinerId = user.split(',')[0]
                     joinerIp = user.split(',')[1]
                     joinerPort = user.split(',')[2]

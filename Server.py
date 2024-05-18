@@ -13,6 +13,7 @@ def AddUser():
     if path.exists("UserList.txt"):
         with open("UserList.txt", 'r') as f:
             users = f.readlines()
+            users = [line.strip() for line in users]
             for user in users:
                 if user.split(',')[0] == ID:  # 동일 ID 유저 접속, 이전 정보는 제거
                     continue
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     serverSocket.bind((serverName, serverPort))
 
-    print("Server Online")
+    print("서버 on")
 
     with open("UserList.txt", 'w') as f: #유저 목록 비우기
         f.write("")
