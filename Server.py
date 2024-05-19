@@ -30,10 +30,13 @@ def AddUser():
                 f.write(user)
 
 def GiveOnlineUserList():
-    print(message.decode())
+    print('Sending User List')
+
+    message = "USERLIST \n\n"
 
     with open("UserList.txt", 'r') as f:
-        serverSocket.sendto(f.read().encode(), clientAddr)
+        message += f.read()
+    serverSocket.sendto(message.encode(), clientAddr)
 
 if __name__ == '__main__':
     serverSocket = socket(AF_INET, SOCK_DGRAM)

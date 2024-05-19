@@ -1,4 +1,5 @@
 import random
+import threading
 from socket import *
 from threading import Thread
 import time
@@ -7,11 +8,19 @@ serverName = 'localhost'
 serverPort = 10000
 ID = ""
 sessionUserList = []
+socketLock = threading.Lock()
+onlineUsers = ''
 
-def GetUserInfoByID(ID, users):
+def ReadSocket():
+    socketContent = clientSocket.recvfrom(2048)
+
+    return socketContent
+
+
+def GetUserInfoByID(ID):
     ip, port = '', ''
 
-    for user in users.split('\n'):
+    for user in onlineUsers.split('\n'):
         userId = user.split(',')[0]
         if userId == ID:
             ip = user.split(',')[1]
@@ -27,21 +36,24 @@ def RequestUserList():
 
     # 유저 리스트를 확실히 받고 넘어가기
     while True:
+        print('리스트 받기 시도중..')
         try:
             userList, serverAddr = clientSocket.recvfrom(2048)
             break
         except OSError as e:
             pass
 
+
     userList = userList.decode()
-    return userList
+    onlineUsers = userList.split('\n\n')[1]
+    return onlineUsers
 
 
 def MakeSession():
-    users = RequestUserList()
+    onlineUsers = RequestUserList()
 
     invitingUserList = []
-    myIP, myPort = GetUserInfoByID(ID, users)
+    myIP, myPort = GetUserInfoByID(ID)
     message = "INVITE "
     message += (ID + ',' + myIP + ',' + str(myPort))
     message += '\n\n '
@@ -53,7 +65,7 @@ def MakeSession():
             break
 
         ip, port = "", ""
-        ip, port = GetUserInfoByID(oppositeID, users)
+        ip, port = GetUserInfoByID(oppositeID)
 
         if ip == "" and port == "":
             print("존재하지 않는 ID입니다.")
@@ -69,27 +81,57 @@ def MakeSession():
 
 
 def send():
+    global sessionUserList
+    global onlineUsers
     while True:  # 세션의 사용자들에게 메시지 보내기
         message = "MESSAGE "
         message = message + ID + ' '
         content = input()
-        message = message + '\n\n'
-        message = message + content
-        for user in sessionUserList:
-            user_id = user.split(',')[0]
-            if user_id == ID:  # 자기 자신에게는 전송하지 않음
-                continue
-            user_ip = user.split(',')[1]
-            user_port = user.split(',')[2]
-            userAddr = (user_ip, int(user_port))
-            clientSocket.sendto(message.encode(), userAddr)
+
+        if content[0] == '!': #특수 명령어 (초대, 퇴장)
+            if content == '!invite':
+                oppositeID = input("초대할 유저의 ID (취소하려면 . 입력) : ")
+
+                if oppositeID != '.':
+                    ip, port = "", ""
+                    ip, port = GetUserInfoByID(oppositeID)
+
+                    if ip == "" and port == "":
+                        print("존재하지 않는 ID입니다.")
+                    else:
+                        myIP, myPort = GetUserInfoByID(ID)
+                        message = "INVITE "
+                        message += (ID + ',' + myIP + ',' + str(myPort))
+                        message += '\n\n '
+                        
+                        userAddr = (ip, int(port))
+                        clientSocket.sendto(message.encode(), userAddr)
+                        print(ip + port + '로 초대 메시지 보냄')
+
+            if content == '!userlist':
+                message = "USERLIST "
+                clientSocket.sendto(message.encode(), (serverName, serverPort))
+
+
+        else: #일반 메시지
+            message = message + '\n\n'
+            message = message + content
+            for user in sessionUserList:
+                user_id = user.split(',')[0]
+                if user_id == ID:  # 자기 자신에게는 전송하지 않음
+                    continue
+                user_ip = user.split(',')[1]
+                user_port = user.split(',')[2]
+                userAddr = (user_ip, int(user_port))
+                clientSocket.sendto(message.encode(), userAddr)
 
 
 def recv():
     global sessionUserList
+    global onlineUsers
     while True:
         try:
-            message, userAddr = clientSocket.recvfrom(2048)
+            message, userAddr = ReadSocket()
             message = message.decode()
 
             header = message.split('\n\n')[0]
@@ -104,8 +146,8 @@ def recv():
                 joinerIp = ''
                 joinerPort = ''
 
-                users = RequestUserList()
-                joinerIp, joinerPort = GetUserInfoByID(joinerId, users)
+                onlineUsers = RequestUserList()
+                joinerIp, joinerPort = GetUserInfoByID(joinerId)
 
                 sessionUserList.append(joinerId + ',' + joinerIp + ',' + str(joinerPort))
                 print(joinerId + '님이 세션에 참가하였습니다.')
@@ -136,10 +178,16 @@ def recv():
                     joinerIp = user.split(',')[1]
                     joinerPort = user.split(',')[2]
                     sessionUserList.append(joinerId + ',' + joinerIp + ',' + str(joinerPort))
+                    print("세션에 참여 중인 유저 목록")
+                    for user in sessionUserList:
+                        print(user)
 
-                print("세션에 참여 중인 유저 목록")
-                for user in sessionUserList:
-                    print(user)
+            if header.split(' ')[0] == "USERLIST":
+                onlineUsers = content
+                print("유저 목록")
+                print(onlineUsers)
+
+
 
         except OSError as e:
             pass
@@ -158,9 +206,9 @@ if __name__ == '__main__':
     message += (ID + ' ')
     clientSocket.sendto(message.encode(), (serverName, serverPort))
 
-    users = RequestUserList()
+    onlineUsers = RequestUserList()
     print("유저 목록")
-    print(users)
+    print(onlineUsers)
 
     while True:
         print("커맨드 목록")
@@ -170,13 +218,13 @@ if __name__ == '__main__':
         command = input(">> ")
 
         if command == 'UserList' or command == '1':
-            users = RequestUserList()
+            onlineUsers = RequestUserList()
             print("유저 목록")
-            print(users)
+            print(onlineUsers)
 
         elif command == 'MakeSession' or command == '2':
-            users = RequestUserList()
-            myIP, myPort = GetUserInfoByID(ID, users)
+            onlineUsers = RequestUserList()
+            myIP, myPort = GetUserInfoByID(ID)
 
             sessionUserList.append(ID + ',' + myIP + ',' + str(myPort))
 
@@ -193,7 +241,7 @@ if __name__ == '__main__':
         elif command == 'Stay' or command == '3':
             print("대기중...")
             while True:
-                message, userAddr = clientSocket.recvfrom(2048)
+                message, userAddr = ReadSocket()
                 message = message.decode()
                 header = message.split('\n\n')[0]
                 if header.split(' ')[0] == "INVITE":
