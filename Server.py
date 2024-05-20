@@ -38,6 +38,27 @@ def GiveOnlineUserList():
         message += f.read()
     serverSocket.sendto(message.encode(), clientAddr)
 
+
+def RemoveUser():
+    newUserList = []
+    exitingUserId = message.decode().split(' ')[1]
+    if path.exists("UserList.txt"):
+        with open("UserList.txt", 'r') as f:
+            users = f.readlines()
+            users = [line.strip() for line in users]
+            for user in users:
+                if user.split(',')[0] == exitingUserId:  # 동일 ID 유저 접속, 이전 정보는 제거
+                    continue
+                else:
+                    newUserList.append(user)
+    with open("UserList.txt", 'w') as f:
+        for idx, user in enumerate(newUserList):
+            if idx != len(newUserList) - 1:
+                f.write(user + '\n')
+            else:
+                f.write(user)
+
+
 if __name__ == '__main__':
     serverSocket = socket(AF_INET, SOCK_DGRAM)
     serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -56,3 +77,6 @@ if __name__ == '__main__':
 
         elif message.decode().split(' ')[0] == "USERLIST":
             GiveOnlineUserList()
+
+        elif message.decode().split(' ')[0] == "EXIT":
+            RemoveUser()

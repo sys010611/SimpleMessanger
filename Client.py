@@ -10,6 +10,7 @@ ID = ""
 sessionUserList = []
 socketLock = threading.Lock()
 onlineUsers = ''
+exitFlag = False
 
 def ReadSocket():
     socketContent = clientSocket.recvfrom(2048)
@@ -83,6 +84,7 @@ def MakeSession():
 def send():
     global sessionUserList
     global onlineUsers
+    global exitFlag
     while True:  # 세션의 사용자들에게 메시지 보내기
         message = "MESSAGE "
         message = message + ID + ' '
@@ -107,6 +109,24 @@ def send():
                         userAddr = (ip, int(port))
                         clientSocket.sendto(message.encode(), userAddr)
                         print(ip + port + '로 초대 메시지 보냄')
+
+            if content == '!exit':
+                message = "EXIT "
+                message += ID
+                message += '\n\n '
+
+                #  서버와 유저들에게 퇴장 사실 알리기
+                clientSocket.sendto(message.encode(), (serverName, serverPort))
+                for user in sessionUserList:
+                    id = user.split(',')[0]
+                    if id == ID:
+                        continue
+                    ip = user.split(',')[1]
+                    port = user.split(',')[2]
+                    userAddr = (ip, int(port))
+                    clientSocket.sendto(message.encode(), userAddr)
+
+                exitFlag = True
 
             if content == '!userlist':
                 message = "USERLIST "
@@ -187,7 +207,12 @@ def recv():
                 print("유저 목록")
                 print(onlineUsers)
 
-
+            if header.split(' ')[0] == "EXIT":
+                for user in sessionUserList:
+                    if user.split(',')[0] == header.split(' ')[1]:
+                        sessionUserList.remove(user) #떠난다고 알린 유저 목록에서 삭제
+                        break
+                print(header.split(' ')[1] + '님이 퇴장했습니다.')
 
         except OSError as e:
             pass
@@ -198,6 +223,9 @@ if __name__ == '__main__':
 
     sender = Thread(target=send, args=())
     receiver = Thread(target=recv, args=())
+
+    sender.daemon = True
+    receiver.daemon = True
 
     ID = input("Enter Your ID : ")
 
@@ -234,9 +262,6 @@ if __name__ == '__main__':
 
             sender.start()
             receiver.start()
-
-            while True:
-                time.sleep(1)
 
         elif command == 'Stay' or command == '3':
             print("대기중...")
@@ -277,5 +302,8 @@ if __name__ == '__main__':
                     else:
                         print("초대 거절")
                         continue
-            while True:
-                time.sleep(1)
+
+        while True:
+            time.sleep(1)
+            if exitFlag == True:
+                exit(0)
