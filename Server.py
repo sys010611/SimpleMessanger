@@ -2,6 +2,9 @@ from socket import *
 import os.path
 from os import path
 
+################################
+#서버 정보
+##############################
 serverPort = 10000
 serverIP = '192.168.0.9'
 
@@ -41,7 +44,8 @@ def GiveOnlineUserList():
 
 def RemoveUser():
     newUserList = []
-    exitingUserId = message.decode().split(' ')[1]
+    exitingUserId = message.decode().split('\n\n')[0].split(' ')[1]
+    print(exitingUserId + ' 로그아웃')
     if path.exists("UserList.txt"):
         with open("UserList.txt", 'r') as f:
             users = f.readlines()

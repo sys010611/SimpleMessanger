@@ -4,8 +4,12 @@ from socket import *
 from threading import Thread
 import time
 
+################################
+#서버 정보
+##############################
 serverIP = '192.168.0.9'
 serverPort = 10000
+
 ID = ""
 sessionUserList = []
 socketLock = threading.Lock()
