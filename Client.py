@@ -107,7 +107,6 @@ def send():
                         
                         userAddr = (ip, int(port))
                         clientSocket.sendto(message.encode(), userAddr)
-                        print(ip + port + '로 초대 메시지 보냄')
 
             if content == '!exit':
                 message = "EXIT "
@@ -197,9 +196,6 @@ def recv():
                     joinerIp = user.split(',')[1]
                     joinerPort = user.split(',')[2]
                     sessionUserList.append(joinerId + ',' + joinerIp + ',' + str(joinerPort))
-                    print("세션에 참여 중인 유저 목록")
-                    for user in sessionUserList:
-                        print(user)
 
             if header.split(' ')[0] == "USERLIST":
                 onlineUsers = content
@@ -302,6 +298,9 @@ if __name__ == '__main__':
                     else:
                         print("초대 거절")
                         continue
+
+        else:
+            continue
 
         while True:
             time.sleep(1)
