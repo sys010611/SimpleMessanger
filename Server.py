@@ -3,7 +3,7 @@ import os.path
 from os import path
 
 serverPort = 10000
-serverName = 'localhost'
+serverName = '127.0.0.1'
 
 def AddUser():
     print(message.decode())
@@ -47,7 +47,7 @@ def RemoveUser():
             users = f.readlines()
             users = [line.strip() for line in users]
             for user in users:
-                if user.split(',')[0] == exitingUserId:  # 동일 ID 유저 접속, 이전 정보는 제거
+                if user.split(',')[0] == exitingUserId:  # 퇴장 유저 정보는 제거
                     continue
                 else:
                     newUserList.append(user)

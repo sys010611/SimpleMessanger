@@ -4,7 +4,7 @@ from socket import *
 from threading import Thread
 import time
 
-serverName = 'localhost'
+serverName = '127.0.0.1'
 serverPort = 10000
 ID = ""
 sessionUserList = []
@@ -37,7 +37,6 @@ def RequestUserList():
 
     # 유저 리스트를 확실히 받고 넘어가기
     while True:
-        print('리스트 받기 시도중..')
         try:
             userList, serverAddr = clientSocket.recvfrom(2048)
             break
