@@ -4,7 +4,7 @@ from socket import *
 from threading import Thread
 import time
 
-serverName = '127.0.0.1'
+serverIP = '192.168.0.9'
 serverPort = 10000
 ID = ""
 sessionUserList = []
@@ -33,7 +33,7 @@ def GetUserInfoByID(ID):
 def RequestUserList():
     # 현재 온라인인 유저 목록 요청
     message = "USERLIST "
-    clientSocket.sendto(message.encode(), (serverName, serverPort))
+    clientSocket.sendto(message.encode(), (serverIP, serverPort))
 
     # 유저 리스트를 확실히 받고 넘어가기
     while True:
@@ -115,7 +115,7 @@ def send():
                 message += '\n\n '
 
                 #  서버와 유저들에게 퇴장 사실 알리기
-                clientSocket.sendto(message.encode(), (serverName, serverPort))
+                clientSocket.sendto(message.encode(), (serverIP, serverPort))
                 for user in sessionUserList:
                     id = user.split(',')[0]
                     if id == ID:
@@ -129,7 +129,7 @@ def send():
 
             if content == '!userlist':
                 message = "USERLIST "
-                clientSocket.sendto(message.encode(), (serverName, serverPort))
+                clientSocket.sendto(message.encode(), (serverIP, serverPort))
 
 
         else: #일반 메시지
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     # 서버에 ID를 보냄
     message = "LOGIN "
     message += (ID + ' ')
-    clientSocket.sendto(message.encode(), (serverName, serverPort))
+    clientSocket.sendto(message.encode(), (serverIP, serverPort))
 
     onlineUsers = RequestUserList()
     print("유저 목록")
@@ -248,6 +248,7 @@ if __name__ == '__main__':
             onlineUsers = RequestUserList()
             print("유저 목록")
             print(onlineUsers)
+            continue
 
         elif command == 'MakeSession' or command == '2':
             onlineUsers = RequestUserList()

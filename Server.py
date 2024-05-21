@@ -3,7 +3,7 @@ import os.path
 from os import path
 
 serverPort = 10000
-serverName = '127.0.0.1'
+serverIP = '192.168.0.9'
 
 def AddUser():
     print(message.decode())
@@ -62,7 +62,7 @@ def RemoveUser():
 if __name__ == '__main__':
     serverSocket = socket(AF_INET, SOCK_DGRAM)
     serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    serverSocket.bind((serverName, serverPort))
+    serverSocket.bind((serverIP, serverPort))
 
     print("서버 on")
 
