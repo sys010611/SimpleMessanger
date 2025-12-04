@@ -5,7 +5,7 @@ from threading import Thread
 import time
 
 ################################
-#서버 정보
+# サーバー情報
 ##############################
 serverIP = '192.168.0.9'
 serverPort = 10000
@@ -35,11 +35,11 @@ def GetUserInfoByID(ID):
     return ip, port
 
 def RequestUserList():
-    # 현재 온라인인 유저 목록 요청
+    # 現在オンラインのユーザーリストを要求
     message = "USERLIST "
     clientSocket.sendto(message.encode(), (serverIP, serverPort))
 
-    # 유저 리스트를 확실히 받고 넘어가기
+    # ユーザーリストを確実に受信してから次へ進む
     while True:
         try:
             userList, serverAddr = clientSocket.recvfrom(2048)
@@ -62,8 +62,8 @@ def MakeSession():
     message += (ID + ',' + myIP + ',' + str(myPort))
     message += '\n\n '
 
-    while True:  # 원하는 만큼 세션에 초청
-        oppositeID = input("세션에 초대할 상대방의 ID를 입력하시오 (초대 종료 시 '.' 입력) : ")
+    while True:  # 好きなだけセッションに招待
+        oppositeID = input("セッションに招待する相手のIDを入力してください（招待を終わるには '.' を入力）: ")
 
         if oppositeID == '.':
             break
@@ -72,12 +72,12 @@ def MakeSession():
         ip, port = GetUserInfoByID(oppositeID)
 
         if ip == "" and port == "":
-            print("존재하지 않는 ID입니다.")
+            print("存在しないIDです.")
         else:
             invitingUserList.append((oppositeID, ip, port))
 
     for user in invitingUserList:
-        # 초대장 보내기
+        # 招待状を送信
         userAddr = (user[1], int(user[2]))
         clientSocket.sendto(message.encode(), userAddr)
 
@@ -88,21 +88,21 @@ def send():
     global sessionUserList
     global onlineUsers
     global exitFlag
-    while True:  # 세션의 사용자들에게 메시지 보내기
+    while True:  # セッションのユーザーたちにメッセージを送信
         message = "MESSAGE "
         message = message + ID + ' '
         content = input()
 
-        if content[0] == '!': #특수 명령어 (초대, 퇴장)
+        if content[0] == '!': # 特殊コマンド（招待、退出）
             if content == '!invite':
-                oppositeID = input("초대할 유저의 ID (취소하려면 . 입력) : ")
+                oppositeID = input("招待するユーザーのID（キャンセルするには . を入力）: ")
 
                 if oppositeID != '.':
                     ip, port = "", ""
                     ip, port = GetUserInfoByID(oppositeID)
 
                     if ip == "" and port == "":
-                        print("존재하지 않는 ID입니다.")
+                        print("存在しないIDです.")
                     else:
                         myIP, myPort = GetUserInfoByID(ID)
                         message = "INVITE "
@@ -117,7 +117,7 @@ def send():
                 message += ID
                 message += '\n\n '
 
-                #  서버와 유저들에게 퇴장 사실 알리기
+                #  サーバーとユーザーたちに退出を通知
                 clientSocket.sendto(message.encode(), (serverIP, serverPort))
                 for user in sessionUserList:
                     id = user.split(',')[0]
@@ -135,12 +135,12 @@ def send():
                 clientSocket.sendto(message.encode(), (serverIP, serverPort))
 
 
-        else: #일반 메시지
+        else: # 一般メッセージ
             message = message + '\n\n'
             message = message + content
             for user in sessionUserList:
                 user_id = user.split(',')[0]
-                if user_id == ID:  # 자기 자신에게는 전송하지 않음
+                if user_id == ID:  # 自分自身には送信しない
                     continue
                 user_ip = user.split(',')[1]
                 user_port = user.split(',')[2]
@@ -172,9 +172,9 @@ def recv():
                 joinerIp, joinerPort = GetUserInfoByID(joinerId)
 
                 sessionUserList.append(joinerId + ',' + joinerIp + ',' + str(joinerPort))
-                print(joinerId + '님이 세션에 참가하였습니다.')
+                print(joinerId + 'さんがセッションに参加しました。')
 
-                # sessionUserList 재전파
+                # sessionUserList を再配布
                 message = "INFORM "
                 message += "\n\n"
                 for idx, user in enumerate(sessionUserList):
@@ -203,15 +203,15 @@ def recv():
 
             if header.split(' ')[0] == "USERLIST":
                 onlineUsers = content
-                print("유저 목록")
+                print("ユーザーリスト")
                 print(onlineUsers)
 
             if header.split(' ')[0] == "EXIT":
                 for user in sessionUserList:
                     if user.split(',')[0] == header.split(' ')[1]:
-                        sessionUserList.remove(user) #떠난다고 알린 유저 목록에서 삭제
+                        sessionUserList.remove(user) # 退出したと知らせたユーザーをリストから削除
                         break
-                print(header.split(' ')[1] + '님이 퇴장했습니다.')
+                print(header.split(' ')[1] + 'さんが退室しました。')
 
         except OSError as e:
             pass
@@ -228,25 +228,25 @@ if __name__ == '__main__':
 
     ID = input("Enter Your ID : ")
 
-    # 서버에 ID를 보냄
+    # サーバーにIDを送信
     message = "LOGIN "
     message += (ID + ' ')
     clientSocket.sendto(message.encode(), (serverIP, serverPort))
 
     onlineUsers = RequestUserList()
-    print("유저 목록")
+    print("ユーザーリスト")
     print(onlineUsers)
 
     while True:
-        print("커맨드 목록")
-        print("1. UserList : 유저 목록 새로고침")
-        print("2. MakeSession : 세션 만들기")
-        print("3. Stay : 초대 기다리기")
+        print("コマンド一覧")
+        print("1. UserList : ユーザーリスト再読み込み")
+        print("2. MakeSession : セッション作成")
+        print("3. Stay : 招待を待機")
         command = input(">> ")
 
         if command == 'UserList' or command == '1':
             onlineUsers = RequestUserList()
-            print("유저 목록")
+            print("ユーザーリスト")
             print(onlineUsers)
             continue
 
@@ -258,13 +258,13 @@ if __name__ == '__main__':
 
             MakeSession()
 
-            print("내용을 입력하고 ENTER로 전송")
+            print("内容を入力してENTERで送信")
 
             sender.start()
             receiver.start()
 
         elif command == 'Stay' or command == '3':
-            print("대기중...")
+            print("待機中...")
             while True:
                 message, userAddr = ReadSocket()
                 message = message.decode()
@@ -282,13 +282,13 @@ if __name__ == '__main__':
                             inviterPort = user.split(',')[2]
                             break
 
-                    print(inviterID + '로부터의 세션 초대 (y/n)')
+                    print(inviterID + 'からのセッション招待 (y/n)')
 
                     accept = input('>> ')
                     if accept == 'Y' or accept == 'y':
-                        print("초대 수락")
+                        print("招待を承諾")
 
-                        # 세션 주인에게 자신이 참가했다는 사실 알리기
+                        # セッションホストに参加したことを知らせる
                         message = 'JOIN '
                         message += ID
                         message += '\n\n'
@@ -300,7 +300,7 @@ if __name__ == '__main__':
                         receiver.start()
                         break
                     else:
-                        print("초대 거절")
+                        print("招待を拒否")
                         continue
 
         else:

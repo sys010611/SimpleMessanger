@@ -3,7 +3,7 @@ import os.path
 from os import path
 
 ################################
-#서버 정보
+# サーバー情報
 ##############################
 serverPort = 10000
 serverIP = '192.168.0.9'
@@ -18,12 +18,12 @@ def AddUser():
             users = f.readlines()
             users = [line.strip() for line in users]
             for user in users:
-                if user.split(',')[0] == ID:  # 동일 ID 유저 접속, 이전 정보는 제거
+                if user.split(',')[0] == ID:  # 同じIDのユーザー接続、以前の情報は削除
                     continue
                 else:
                     newUserList.append(user)
 
-    newUserList.append(ID + ',' + str(clientAddr[0]) + ',' + str(clientAddr[1]))  # 새로 접속한 유저 리스트에 추가
+    newUserList.append(ID + ',' + str(clientAddr[0]) + ',' + str(clientAddr[1]))  # 新しく接続したユーザーをリストに追加
 
     with open("UserList.txt", 'w') as f:
         for idx, user in enumerate(newUserList):
@@ -33,7 +33,7 @@ def AddUser():
                 f.write(user)
 
 def GiveOnlineUserList():
-    print('Sending User List')
+    print('ユーザーリスト送信中')
 
     message = "USERLIST \n\n"
 
@@ -45,13 +45,13 @@ def GiveOnlineUserList():
 def RemoveUser():
     newUserList = []
     exitingUserId = message.decode().split('\n\n')[0].split(' ')[1]
-    print(exitingUserId + ' 로그아웃')
+    print(exitingUserId + ' ログアウト')
     if path.exists("UserList.txt"):
         with open("UserList.txt", 'r') as f:
             users = f.readlines()
             users = [line.strip() for line in users]
             for user in users:
-                if user.split(',')[0] == exitingUserId:  # 퇴장 유저 정보는 제거
+                if user.split(',')[0] == exitingUserId:  # 退場ユーザー情報は削除
                     continue
                 else:
                     newUserList.append(user)
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     serverSocket.bind((serverIP, serverPort))
 
-    print("서버 on")
+    print("サーバー on")
 
-    with open("UserList.txt", 'w') as f: #유저 목록 비우기
+    with open("UserList.txt", 'w') as f: # ユーザーリストを空にする
         f.write("")
 
     while True:
